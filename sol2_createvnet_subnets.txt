@@ -1,0 +1,37 @@
+﻿<#******************************************************************************************************************************************
+Created By    : Nagendra Kasturi
+Created Date  : 15-April-18
+Tested By     : 
+Tested Date   : 
+Description   : Create a virtual network and multiple subnets 
+
+Modified By   :
+Modified Date :
+
+******************************************************************************************************************************************#>
+
+#Login to azure and select subcription 
+Login-Azurermaccount -Subscription "f4814245-2162-4402-92ad-8b8a1205b04c"
+
+#variables 
+
+$rgName = 'sol2-rg'
+$vnetName = 'sol2-vn' 
+$vnetaddressPrefix = '10.0.0.0/16'
+
+#create subnets 
+$GatewaySubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix '10.0.255.224/29'
+$privatedmzin = New-AzureRmVirtualNetworkSubnetConfig -Name 'private-dmz-in' -AddressPrefix '10.0.0.0/27'
+$privatedmzout = New-AzureRmVirtualNetworkSubnetConfig -Name 'private-dmz-out' -AddressPrefix '10.0.0.32/27'
+$publicdmzin = New-AzureRmVirtualNetworkSubnetConfig -Name 'public-dmz-in' -AddressPrefix '10.0.0.64/27'
+$publicdmzout = New-AzureRmVirtualNetworkSubnetConfig -Name 'public-dmz-out' -AddressPrefix '10.0.0.96/27'
+$Managementsubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'Managementsubnet' -AddressPrefix '10.0.0.128/27'
+$ADsubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'ADsubnet' -AddressPrefix '10.0.0.160/28'
+$websubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'websunet' -AddressPrefix '10.0.1.0/24'
+$bizsubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'bizsubnet' -AddressPrefix '10.0.2.0/24'
+$datasubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'datasubnet' -AddressPrefix '10.0.3.0/24'
+
+
+#create vnet
+$vnet = New-AzureRmVirtualNetwork -ResourceGroupName $rgName -Name $vnetName -AddressPrefix $vnetaddressPrefix `
+  -Location $location -Subnet $GatewaySubnet, $privatedmzin, $privatedmzout, $publicdmzin, $publicdmzout, $Managementsubnet, $ADsubnet, $websubnet, $bizsubnet, $datasubnet
