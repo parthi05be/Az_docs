@@ -1,0 +1,24 @@
+﻿#### Key-vault Location should be same as VM location whose Disk need to be encrypted ####
+Login-AzureRmAccount
+[String]$sub = Read-Host -Prompt "Input your subscription Name :"
+
+Select-AzureRmSubscription -SubscriptionName $sub
+
+Write-Host "Your Selected Subscription is : '$sub'"
+[array]$VMs = Get-AzureRMVM -Status -ErrorAction Stop
+[array]$VMs_to_disk_encryption = import-CSV "C:\Users\amlan\test.csv"
+
+ForEach ($VM in $VMs){
+
+if(($VMs_to_disk_encryption.Name -contains ($VM.Name)) -and ($VMs_to_disk_encryption.ResourceGroupName -contains ($VM.ResourceGroupName))){
+
+# Following four values you got from execution result of "AzureDiskEncryptionPreRequisiteSetup.ps1" #
+$ApplicationId = "2b21e92e-3c08-43b0-a1fb-d378f6472f69"
+$appsecret = "6e8e28c8-8eef-4cee-b3cd-bfe82e296f48"
+$diskEncryptionKeyVaultUrl = "https://pekhamkeyvault.vault.azure.net"
+$DiskEncryptionKeyVaultId =  "/subscriptions/35339816-b92a-4d00-bfce-d15e12a8d123/resourceGroups/pekhamrg/providers/Microsoft.KeyVault/vaults/pekhamkeyvault"
+
+Set-AzureRmVMDiskEncryptionExtension -ResourceGroupName $VM.ResourceGroupName -VMName $VM.Name -AadClientID $ApplicationId -AadClientSecret $appsecret -DiskEncryptionKeyVaultUrl $diskEncryptionKeyVaultUrl -DiskEncryptionKeyVaultId $DiskEncryptionKeyVaultId -VolumeType All
+
+#Use the below cmdlet to check the Encryption status from Azure Portal End
+Get-AzureRmVMDiskEncryptionStatus -ResourceGroupName $VM.ResourceGroupName -VMName $VM.Name}}
