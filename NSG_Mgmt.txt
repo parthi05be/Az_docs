@@ -1,0 +1,83 @@
+﻿<#******************************************************************************************************************************************
+Created By    : Nagendra Kasturi
+Created Date  : 16-April-18
+Tested By     : 
+Tested Date   : 
+Description   : Create NSG and associate to a subnet 
+
+Modified By   :
+Modified Date :
+
+******************************************************************************************************************************************#>
+
+#Login to azure and select subcription 
+Login-Azurermaccount -Subscription "f4814245-2162-4402-92ad-8b8a1205b04c"
+
+#Global variable
+$rgName = "sol2-rg"
+$location = "South India" 
+$nsgName = "mgmtnsg"
+$vnetName = "sol2-vn"
+$subnetName = "Managementsubnet"
+$subnetAddressPrefix = "10.0.0.128/27"
+$protocol = "TCP"  
+
+
+#Local variable 
+$rule1Name = "allow-onprem-rdp-ssh" 
+$rule1Description = "allow on-prem rdp and ssh" 
+$rule1Access = "Allow" 
+$rule1Priority = "100" 
+$rule1sourceaddressRange = "192.168.0.0/16" 
+$rule1destinationaddressRange = "10.0.0.128/27" 
+$rule1Direction = "Inbound" 
+$rule1sourceport = "*" 
+$rule1destinationport = "3389, 22" 
+
+$rule2Name = "allow gateway" 
+$rule2Description = "Allow gateway subnet" 
+$rule2Access = "Allow" 
+$rule2Priority = "110" 
+$rule2sourceaddressRange = "10.0.255.224/29" 
+$rule2destinationaddressRange = "10.0.0.128/27" 
+$rule2Direction = "Inbound" 
+$rule2sourceport = "*" 
+$rule2destinationport = "*" 
+
+$rule3Name = "allow-self" 
+$rule3Description = "allow mgmt subnet" 
+$rule3Access = "Allow" 
+$rule3Priority = "120" 
+$rule3sourceaddressRange = "10.0.0.128/27" 
+$rule3destinationaddressRange = "10.0.0.128/27" 
+$rule3Direction = "Inbound" 
+$rule3sourceport = "*" 
+$rule3destinationport = "*" 
+
+$rule4Name = "deny-vnet" 
+$rule4Description = "deny rest of traffic from vnet" 
+$rule4Access = "Deny" 
+$rule4Priority = "130" 
+$rule4sourceaddressRange = "10.0.0.0/16" 
+$rule4destinationaddressRange = "10.0.0.128/27" 
+$rule4Direction = "Inbound" 
+$rule4sourceport = "*" 
+$rule4destinationport = "*" 
+
+#create nsg rules 
+$rule1 = New-AzureRmNetworkSecurityRuleConfig -Name $rule1Name -Description $rule1Description -Access $rule1Access -Protocol $protocol -Direction $rule1Direction -Priority $rule1Priority -SourceAddressPrefix $rule1sourceaddressRange -SourcePortRange $rule1sourceport -DestinationAddressPrefix $rule1destinationaddressRange -DestinationPortRange $rule1destinationport
+$rule2 = New-AzureRmNetworkSecurityRuleConfig -Name $rule2Name -Description $rule2Description -Access $rule2Access -Protocol $protocol -Direction $rule2Direction -Priority $rule2Priority -SourceAddressPrefix $rule2sourceaddressRange -SourcePortRange $rule2sourceport -DestinationAddressPrefix $rule2destinationaddressRange -DestinationPortRange $rule2destinationport
+$rule3 = New-AzureRmNetworkSecurityRuleConfig -Name $rule3Name -Description $rule3Description -Access $rule3Access -Protocol $protocol -Direction $rule3Direction -Priority $rule3Priority -SourceAddressPrefix $rule3sourceaddressRange -SourcePortRange $rule3sourceport -DestinationAddressPrefix $rule3destinationaddressRange -DestinationPortRange $rule3destinationport
+$rule4 = New-AzureRmNetworkSecurityRuleConfig -Name $rule4Name -Description $rule4Description -Access $rule4Access -Protocol $protocol -Direction $rule4Direction -Priority $rule4Priority -SourceAddressPrefix $rule4sourceaddressRange -SourcePortRange $rule4sourceport -DestinationAddressPrefix $rule4destinationaddressRange -DestinationPortRange $rule4destinationport
+
+
+#create NSG
+$networksecurityGroup = New-AzureRmNetworkSecurityGroup -ResourceGroupName $rgName -Location $location -Name $nsgName -SecurityRules $rule1,$rule2,$rule3,$rule4
+
+
+#associate nsg to a subnet 
+ $vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $rgName -Name $vnetName 
+ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $subnetName -AddressPrefix $subnetAddressPrefix -NetworkSecurityGroup $networksecurityGroup
+
+#Update Virtual network 
+ Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
